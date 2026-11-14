@@ -1,9 +1,9 @@
-import type { CSSProperties } from 'react';
+﻿import { Children, cloneElement, isValidElement, type CSSProperties, type ReactElement, type ReactNode } from 'react';
 import { ART, ICONS, NATURAL_TINT, type ArtName, type IconName, type Tint } from './data';
 import { useMeadow } from '../components/MeadowProvider';
 import { cx } from '../lib/cx';
 
-const ROTATION: Tint[] = ['aqua', 'mint', 'sky', 'sand'];
+const ROTATION: Tint[] = ['sand', 'sky', 'blush', 'lilac', 'aqua', 'mint'];
 const fillable = (name: string) => !!ICONS[name as IconName]?.personal.includes('{{T}}');
 
 /**
@@ -68,6 +68,8 @@ export function Icon({ name, tint, size = 24, title, className, style }: IconPro
       role={title ? 'img' : undefined}
       aria-label={title}
       style={style}
+      data-icon={name}
+      data-auto-tint={vibe === 'personal' && tint === undefined && fillable(name) ? '' : undefined}
       dangerouslySetInnerHTML={{ __html: body }}
     />
   );
@@ -98,3 +100,62 @@ export function Art({ name, size = 64, title, className }: ArtProps) {
     />
   );
 }
+
+/**
+ * Wrap any run of neighbouring icon-bearing elements (IconButton, Button, Chip, Fab, Icon) so their icons get
+ * different pastel tints instead of repeating. Use for button rows, chip rows and toolbars. Does nothing in Clean.
+ * Pass-through for elements that already have a tint. Wrapper elements are rendered unchanged.
+ */
+export function TintGroup({ children }: { children: ReactNode }) {
+  const items = Children.toArray(children).filter(isValidElement) as ReactElement<{ icon?: string; name?: string; tint?: Tint | null }>[];
+  const names = items.map((c) => c.props.icon ?? c.props.name);
+  const tints = iconTints(names);
+  let idx = 0;
+  return <>{Children.map(children, (c) => {
+    if (!isValidElement(c)) return c;
+    const t = tints[idx++];
+    const el = c as ReactElement<{ tint?: Tint | null }>;
+    return el.props.tint !== undefined || t == null ? c : cloneElement(el, { tint: t });
+  })}</>;
+}
+
+/**
+ * Automatic contextual tints for icons that were not given a tint (buttons, chips, toolbars, anywhere outside List and TabBar).
+ * Called by MeadowProvider. Neighbouring icons are grouped by their closest shared container and tinted with iconTints().
+ * Returns a cleanup function.
+ */
+export function startAutoTint(): () => void {
+  if (typeof document === 'undefined') return () => {};
+  let raf = 0;
+  const run = () => {
+    raf = 0;
+    const icons = Array.from(document.querySelectorAll<SVGElement>('svg[data-auto-tint]'));
+    if (!icons.length) return;
+    const groups = new Map<Element, SVGElement[]>();
+    for (const ic of icons) {
+      let el: Element | null = ic.parentElement;
+      let group: Element = document.body;
+      while (el && el !== document.body) {
+        if (el.querySelectorAll('svg[data-auto-tint]').length >= 2) { group = el; break; }
+        el = el.parentElement;
+      }
+      const list = groups.get(group) ?? [];
+      list.push(ic); groups.set(group, list);
+    }
+    groups.forEach((list) => {
+      const tints = iconTints(list.map((n) => n.getAttribute('data-icon') ?? undefined));
+      list.forEach((n, k) => {
+        const t = tints[k];
+        if (!t) return;
+        n.querySelectorAll('[fill^="url(#m-t-"]').forEach((p) => p.setAttribute('fill', `url(#m-t-${t})`));
+      });
+    });
+  };
+  const schedule = () => { if (!raf) raf = requestAnimationFrame(run); };
+  const obs = new MutationObserver(schedule);
+  obs.observe(document.body, { childList: true, subtree: true });
+  schedule();
+  return () => { obs.disconnect(); if (raf) cancelAnimationFrame(raf); };
+}
+
+

@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+﻿import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ICON_DEFS } from '../icons/data';
 import { feedback } from '../lib/feedback';
+import { startAutoTint } from '../icons/Icon';
 
 export type Vibe = 'personal' | 'clean';
 
@@ -40,6 +41,8 @@ export function MeadowProvider({ vibe: initialVibe = 'personal', sound: initialS
     document.body.classList.add('m-body');
   }, [vibe]);
 
+  useEffect(() => (vibe === 'personal' ? startAutoTint() : undefined), [vibe]);
+
   useEffect(() => {
     feedback.configure({ vibe, sound, haptics });
     feedback.autowire();
@@ -58,4 +61,19 @@ export function MeadowProvider({ vibe: initialVibe = 'personal', sound: initialS
 /** Current vibe and the settings for vibe, sound and haptics. */
 export function useMeadow() {
   return useContext(MeadowContext);
+}
+
+
+/**
+ * Renders its children in a different vibe than the rest of the app (for example a Clean summary inside a Personal app).
+ * Sets data-theme on a wrapper so tokens switch, and makes Icon and other components follow that vibe. Does not touch html or body.
+ */
+export function VibeScope({ vibe, children, className }: { vibe: Vibe; children: ReactNode; className?: string }) {
+  const parent = useContext(MeadowContext);
+  const value = useMemo(() => ({ ...parent, vibe }), [parent, vibe]);
+  return (
+    <MeadowContext.Provider value={value}>
+      <div data-theme={vibe} className={className} style={{ background: 'transparent', color: 'var(--ink)' }}>{children}</div>
+    </MeadowContext.Provider>
+  );
 }

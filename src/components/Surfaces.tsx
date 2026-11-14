@@ -1,4 +1,4 @@
-import { Children, cloneElement, isValidElement, useEffect, useRef, useState, type ElementType, type HTMLAttributes, type ReactElement, type ReactNode } from 'react';
+﻿import { Children, cloneElement, isValidElement, useEffect, useLayoutEffect, useRef, useState, type ElementType, type HTMLAttributes, type ReactElement, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { cx } from '../lib/cx';
 import { feedback } from '../lib/feedback';
@@ -197,25 +197,57 @@ export function Menu({ items, onDone }: { items: MenuItem[]; onDone?: () => void
   );
 }
 
-/** An icon button that opens a Menu below it. Closes on outside click and Escape. */
+/**
+ * An icon button that opens a Menu. The menu is drawn on top of the page (a portal), so it is never clipped by a card
+ * and opens upward when there is no room below. Closes on outside click, Escape, scroll and resize.
+ */
 export function MenuButton({ items, label = 'More' }: { items: MenuItem[]; label?: string }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!open || !wrapRef.current || !menuRef.current) return;
+    const r = wrapRef.current.getBoundingClientRect();
+    const m = menuRef.current.getBoundingClientRect();
+    const gap = 6, pad = 8;
+    const below = window.innerHeight - r.bottom - pad;
+    const top = below >= m.height ? r.bottom + gap : Math.max(pad, r.top - m.height - gap);
+    const left = Math.min(Math.max(pad, r.right - m.width), window.innerWidth - m.width - pad);
+    setPos({ top, left });
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
-    const click = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    const close = () => setOpen(false);
+    const click = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (!wrapRef.current?.contains(t) && !menuRef.current?.contains(t)) close();
+    };
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
     document.addEventListener('mousedown', click); document.addEventListener('keydown', key);
-    return () => { document.removeEventListener('mousedown', click); document.removeEventListener('keydown', key); };
+    window.addEventListener('resize', close); window.addEventListener('scroll', close, true);
+    return () => {
+      document.removeEventListener('mousedown', click); document.removeEventListener('keydown', key);
+      window.removeEventListener('resize', close); window.removeEventListener('scroll', close, true);
+    };
   }, [open]);
+
+  const toggle = () => { setPos(null); setOpen((o) => !o); };
+
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-      <IconButton icon="more" label={label} plain aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} />
-      {open && <div style={{ position: 'absolute', right: 0, top: '100%', zIndex: 30, marginTop: 4 }}><Menu items={items} onDone={() => setOpen(false)} /></div>}
+    <div ref={wrapRef} style={{ position: 'relative', display: 'inline-block' }}>
+      <IconButton icon="more" label={label} plain aria-haspopup="menu" aria-expanded={open} onClick={toggle} />
+      {open && typeof document !== 'undefined' && createPortal(
+        <div ref={menuRef} style={{ position: 'fixed', top: pos?.top ?? 0, left: pos?.left ?? 0, zIndex: 80, visibility: pos ? 'visible' : 'hidden' }}>
+          <Menu items={items} onDone={() => setOpen(false)} />
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }
-
 export interface AccordionItem { title: string; content: ReactNode }
 
 /** Expandable sections built on native details elements. Do not hide critical information inside collapsed sections. */
@@ -257,3 +289,4 @@ export function Drawer({ open, onClose, title, children }: DrawerProps) {
     document.body,
   );
 }
+

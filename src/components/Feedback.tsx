@@ -1,22 +1,22 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+﻿import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { cx } from '../lib/cx';
 import { feedback } from '../lib/feedback';
 import { Icon } from '../icons/Icon';
 import { Art } from '../icons/Icon';
-import type { ArtName, IconName } from '../icons/data';
+import type { ArtName, IconName, Tint } from '../icons/data';
 import { Button } from './Actions';
 
 export type StatusKind = 'neutral' | 'success' | 'warning' | 'danger';
 const KIND_ICON: Record<StatusKind, IconName> = { neutral: 'info', success: 'check-circle', warning: 'alert', danger: 'alert' };
 
-export interface ChipProps { kind?: StatusKind; icon?: IconName; children: ReactNode; className?: string }
+export interface ChipProps { kind?: StatusKind; icon?: IconName; tint?: Tint | null; children: ReactNode; className?: string }
 
 /** A small pill label for status or category. Status chips always carry an icon and a word, never color alone. Chips are not tappable. */
-export function Chip({ kind = 'neutral', icon, children, className }: ChipProps) {
+export function Chip({ kind = 'neutral', icon, tint, children, className }: ChipProps) {
   return (
     <span className={cx('m-chip', kind !== 'neutral' && `m-chip--${kind}`, className)}>
-      {icon && <Icon name={icon} size={14} />}
+      {icon && <Icon name={icon} tint={tint} size={14} />}
       {children}
     </span>
   );
@@ -137,3 +137,4 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 export function useToast() {
   return useContext(ToastContext);
 }
+

@@ -66,3 +66,7 @@ Text contrast 4.5:1 in both vibes (audited), visible focus ring on everything in
 
 ## Do not
 Square corners, flat white pages with gray borders, pure black text, purple-blue gradients, emoji as decoration, more than one filled primary button per view, mixing the two vibes, custom buttons or cards where a Meadow component exists, raw hex colors.
+
+## Icon tints outside lists
+Icons only vary in color automatically inside List and TabBar. For button rows, chip rows and toolbars, wrap the elements in <TintGroup> so neighbours get different pastel tints (IconButton, Button, Chip, Fab accept a tint prop). Never leave a row of identical-looking icons.
+

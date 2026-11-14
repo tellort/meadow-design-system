@@ -135,5 +135,5 @@
       return API;
     }
   };
-  window.MeadowFeedback = API;
+  if (typeof window !== 'undefined') window.MeadowFeedback = API; // safe during server-side rendering
 })();

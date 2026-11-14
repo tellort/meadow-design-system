@@ -1,8 +1,8 @@
-// Meadow design system: public API. Import everything from here.
+﻿// Meadow design system: public API. Import everything from here.
 import './styles/index.css';
 
-export { MeadowProvider, useMeadow, type Vibe, type MeadowProviderProps } from './components/MeadowProvider';
-export { Icon, Art, iconTints, type IconProps, type ArtProps } from './icons/Icon';
+export { MeadowProvider, VibeScope, useMeadow, type Vibe, type MeadowProviderProps } from './components/MeadowProvider';
+export { Icon, Art, iconTints, TintGroup, type IconProps, type ArtProps } from './icons/Icon';
 export { ICON_NAMES, type IconName, type ArtName, type Tint } from './icons/data';
 export { feedback, type FeedbackEvent } from './lib/feedback';
 
@@ -28,3 +28,5 @@ export {
   type ChatBubbleProps, type TableColumn, type TimelineItem, type BarDatum,
 } from './components/Data';
 export { Screen } from './components/Layout';
+
+

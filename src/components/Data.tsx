@@ -119,7 +119,7 @@ export function BarChart({ data, description }: { data: BarDatum[]; description:
       {data.map((d, i) => {
         const x = gap + i * (bw + gap), bh = ((d.value / max) * (base - top - 6)) + 6;
         return (
-          <g key={d.label}>
+          <g key={`${d.label}-${i}`}>
             <rect className={cx('m-chart__bar', d.highlight && 'm-chart__bar--hl')} x={x} y={base - bh} width={bw} height={bh} rx={10} />
             {d.highlight && <text x={x + bw / 2} y={base - bh - 8} textAnchor="middle">{d.value}</text>}
             <text x={x + bw / 2} y={h - 2} textAnchor="middle">{d.label}</text>
