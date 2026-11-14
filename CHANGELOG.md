@@ -1,5 +1,8 @@
 ﻿# Changelog
 
+## 1.2.1
+- AGENTS.md: agents change the design system in a separate clone via a branch and pull request, and merge it only after the user says yes in the chat.
+
 ## 1.2.0
 - MenuButton renders in a portal: never clipped by cards, opens upward when there is no room, closes on scroll.
 - VibeScope: show one view in another vibe than the rest of the app.
@@ -10,3 +13,4 @@
 - SSR guard in the feedback module, BarChart key fix.
 ## 1.0.0
 - First release: 55 components, 73 icons in two styles, two vibes, sound and haptics.
+

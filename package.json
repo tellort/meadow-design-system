@@ -1,7 +1,7 @@
 ﻿{
   "name": "meadow-design-system",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "type": "module",
   "description": "Meadow: a calm, light-only React design system with two vibes (Personal and Clean).",
   "scripts": {
@@ -21,4 +21,5 @@
     "vite": "^5.4.11"
   }
 }
+
 
